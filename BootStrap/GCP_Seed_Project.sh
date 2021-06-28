@@ -7,21 +7,60 @@
 ## 2) Billing account ID to be used.
 ## 3) Organization ID
 ##########################USAGE
-## sh GCP_seed_project.sh -d 'DEPT NAME' -o orgnaization_id -b 'Billing ID'
+## sh bootstrap.sh -d 'DEPT NAME' -o orgnaization_id -b 'Billing ID'
 ######################################################################
 
+#!/bin/bash
+cmd_org_list="gcloud organizations list"
+cmd_billing_list="gcloud alpha billing accounts list"
+usage()
+{
+    echo "usage: <command> options:<d|o|b|i>"
+    echo "syntax: sh bootstrap.sh -d DEPT_NAME -o orgnaization_id -b Billing_ID"
+    echo "exmaple sh bootstrap.sh -d SSC -o 1234567891011 -b ######-######-######"
+    echo "*** NOTE *** : Using the -i flag with either \"billing\" or \"org\" gives output based on current gcloud settings"
+    echo "             : sh bootstrap.sh -i org"
+    echo "             : sh bootstrap.sh -i billing"
+    echo "Organisation ID avaialble using 'gcloud organizations list'"
+    echo "Billing ID Avaialble using 'gcloud alpha billing accounts list'"
+}
 
-#!bin/bash
-
-while getopts "d:o:b:" flag;
+no_args="true"
+while getopts dobi: option
 do
-    case "${flag}" in
-        d) dpt=${OPTARG};;
-        o) org_id=${OPTARG};;
-        b) billing_id=${OPTARG};;
+    case $option in
+            d)
+                    dpt=${OPTARG};;
+            o)
+                    org_id=${OPTARG};;
+            b)
+                    billing_id=${OPTARG};;
+            i)
+                    if [ ${OPTARG} == 'org' ]
+                    then
+                        echo $cmd_org_list;
+                        $cmd_org_list;
+                        exit;
+                    elif [ ${OPTARG} == 'billing' ]
+                    then
+                        echo $cmd_billing_list;
+                        $cmd_billing_list;
+                        exit;
+                    fi
+            (*)
+                    usage
+                    exit;;
     esac
+    no_args="false"
 done
+
+[[ "$no_args" == "true" ]] && { usage; exit 1; }
+
+echo $dpt
+echo $org_id
+echo $billing_id
 seed_project_id="${dpt}-seed-project"
+echo $seed_project_id
 #echo "seed project id: $seed_project_id";
 #echo "org id: $org_id";
 #echo "billing id: $billing_id";
